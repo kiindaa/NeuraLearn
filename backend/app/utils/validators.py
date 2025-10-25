@@ -45,11 +45,11 @@ def sanitize_input(text: str) -> str:
     if not text:
         return ''
     
-    # Remove HTML tags
-    text = re.sub(r'<[^>]+>', '', text)
-    
-    # Remove script tags
+    # Remove script blocks first (including content)
     text = re.sub(r'<script[^>]*>.*?</script>', '', text, flags=re.DOTALL | re.IGNORECASE)
+    
+    # Then remove any remaining HTML tags
+    text = re.sub(r'<[^>]+>', '', text)
     
     # Remove potentially dangerous characters
     text = re.sub(r'[<>"\']', '', text)
