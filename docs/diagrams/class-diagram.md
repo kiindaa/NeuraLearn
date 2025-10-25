@@ -1,1 +1,1 @@
-<img width="1918" height="392" alt="ClassDiagram" src="https://github.com/user-attachments/assets/550b8026-a459-4fbd-afc0-1ab53b2ca8d5" />
+<img width="623" height="876" alt="image" src="https://github.com/user-attachments/assets/c2bc1bf1-dcad-41e3-9dab-e95f175fa17e" />
