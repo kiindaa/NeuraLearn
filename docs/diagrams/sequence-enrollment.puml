@@ -1,0 +1,46 @@
+
+
+== User Login Flow ==
+
+group Login Process
+    User -> Frontend: login(email, password)
+    activate Frontend
+    
+    Frontend -> Backend: POST /api/auth/login
+    activate Backend
+    
+    Backend -> AuthManager: authenticateUser(email, password)
+    activate AuthManager
+    AuthManager -> Database: SELECT * FROM users WHERE email = ?
+    activate Database
+    Database --> AuthManager: user_record
+    deactivate Database
+    
+    AuthManager -> AuthManager: verifyPassword(input_password, stored_hash)
+    AuthManager -> AuthManager: checkAccountStatus()
+    AuthManager --> Backend: authentication_result, user_data
+    deactivate AuthManager
+    
+    alt Authentication Successful
+        Backend -> AuthManager: generateJWTToken(user_data)
+        activate AuthManager
+        AuthManager --> Backend: jwt_token, refresh_token
+        deactivate AuthManager
+        
+        Backend -> Database: INSERT INTO sessions VALUES (user_id, token, expiry)
+        activate Database
+        Database --> Backend: session_created
+        deactivate Database
+        
+        Backend --> Frontend: auth_success, tokens, user_profile
+        Frontend --> User: redirectToDashboard(), storeTokens()
+        
+    else Authentication Failed
+        Backend --> Frontend: error: 'Invalid credentials'
+        Frontend --> User: showErrorMessage()
+    end
+    deactivate Backend
+    deactivate Frontend
+end
+
+
