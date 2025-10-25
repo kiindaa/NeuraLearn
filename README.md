@@ -63,7 +63,17 @@ pytest --cov=app --cov-report=term-missing
 - docs/AI_Usage_Log.md
 - docs/diagrams/* (Mermaid + export instructions)
 - docs/api/openapi.yaml
+ - docs/STYLEGUIDE.md
+ - docs/TESTING.md
+ - CONTRIBUTING.md
 
 ---
 
 For additional notes see docs/session-notes.md and docs/TESTCASES.md.
+
+## CI and Coverage Policy
+- CI runs on push and PR via GitHub Actions (see .github/workflows/ci-cd.yml).
+- Frontend job: lint, type-check, test:coverage.
+- Backend job: flake8, black --check, isort --check-only, pytest with coverage.
+- Security scan: Trivy, results uploaded to Security tab.
+- Coverage target: ≥ 60% repository-wide (adjustable). See docs/TESTING.md.

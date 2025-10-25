@@ -20,6 +20,7 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "baseUrl": "src",
+    "types": ["jest", "node"],
     "paths": {
       "@/*": ["*"],
       "@/components/*": ["components/*"],
