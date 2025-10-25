@@ -1,0 +1,137 @@
+
+@startuml
+title Student Learning Journey Sequence Diagram
+
+actor Student as Student
+participant "Frontend UI" as Frontend
+participant "Backend API" as Backend
+participant "CourseManager" as CourseManager
+participant "ProgressTracker" as ProgressTracker
+participant "Database" as Database
+participant "QuizEvaluator" as QuizEvaluator
+participant "RecommendationEngine" as RecommendationEngine
+
+== Phase 1: Course Access & Navigation ==
+
+Student -> Frontend: login(credentials)
+activate Frontend
+Frontend -> Backend: POST /api/auth/login
+activate Backend
+Backend -> Database: validateUser(credentials)
+activate Database
+Database --> Backend: user_data, role
+deactivate Database
+Backend --> Frontend: JWT_token, user_profile
+deactivate Backend
+
+Student -> Frontend: browseCourses()
+Frontend -> Backend: GET /api/courses/available
+activate Backend
+Backend -> CourseManager: getPublishedCourses()
+activate CourseManager
+CourseManager -> Database: SELECT * FROM courses WHERE status = 'published'
+activate Database
+Database --> CourseManager: course_list[]
+deactivate Database
+CourseManager --> Backend: courses_with_metadata
+deactivate CourseManager
+Backend --> Frontend: courses[]
+deactivate Backend
+Frontend --> Student: displayCourseCatalog()
+
+== Phase 2: Lesson Progression ==
+
+Student -> Frontend: selectCourse(course_id)\nstartLesson(lesson_id)
+Frontend -> Backend: GET /api/lessons/{id}/content
+activate Backend
+Backend -> Database: SELECT lesson_content, duration\nFROM lessons WHERE lesson_id = ?
+activate Database
+Database --> Backend: lesson_data
+deactivate Database
+
+Backend -> ProgressTracker: updateProgress(student_id, lesson_id, 'started')
+activate ProgressTracker
+ProgressTracker -> Database: UPDATE user_progress\nSET status = 'started', start_time = NOW()
+activate Database
+Database --> ProgressTracker: update_success
+deactivate Database
+ProgressTracker --> Backend: progress_updated
+deactivate ProgressTracker
+
+Backend --> Frontend: lesson_content, video_url, attachments
+deactivate Backend
+Frontend --> Student: renderInteractiveLesson()
+
+== Phase 3: Quiz Attempt ==
+
+Student -> Frontend: startQuiz(quiz_id)
+Frontend -> Backend: GET /api/quizzes/{id}
+activate Backend
+Backend -> Database: SELECT * FROM quizzes\nWHERE quiz_id = ? AND status = 'approved'
+activate Database
+Database --> Backend: quiz_data
+Backend -> Database: SELECT * FROM questions WHERE quiz_id = ?
+Database --> Backend: questions[]
+deactivate Database
+Backend --> Frontend: quiz_with_questions, time_limit
+deactivate Backend
+Frontend --> Student: displayQuizInterface(timer)
+
+== Phase 4: Answer Submission & Scoring ==
+
+loop For each question
+    Student -> Frontend: answerQuestion(question_id, selected_answer)
+    Frontend -> Frontend: storeAnswerLocally()
+end
+
+Student -> Frontend: submitAnswers(answers_map)
+Frontend -> Backend: POST /api/quizzes/{id}/submit
+activate Backend
+
+Backend -> QuizEvaluator: calculateScore(submitted_answers)
+activate QuizEvaluator
+QuizEvaluator -> Database: SELECT correct_answers FROM questions\nWHERE quiz_id = ?
+activate Database
+Database --> QuizEvaluator: correct_answers_map
+deactivate Database
+
+loop For each question evaluation
+    QuizEvaluator -> QuizEvaluator: compareAnswers(submitted, correct)
+    QuizEvaluator -> QuizEvaluator: calculatePoints()
+end
+
+QuizEvaluator --> Backend: score, correct_count, incorrect_count, time_taken
+deactivate QuizEvaluator
+
+Backend -> Database: INSERT INTO results\nVALUES (student_id, quiz_id, score, timestamp)
+activate Database
+Database --> Backend: result_id
+deactivate Database
+
+Backend -> ProgressTracker: updateMetrics(student_id, performance_data)
+activate ProgressTracker
+ProgressTracker -> Database: UPDATE user_progress\nSET quiz_completed = true, last_score = ?
+activate Database
+Database --> ProgressTracker: update_confirmation
+deactivate Database
+ProgressTracker --> Backend: metrics_updated
+deactivate ProgressTracker
+
+Backend --> Frontend: results, explanations, recommendations
+deactivate Backend
+
+Frontend --> Student: showPerformanceDashboard()
+
+== Phase 5: Progress Tracking & Recommendations ==
+
+ProgressTracker -> RecommendationEngine: suggestNextLesson(performance_data)
+activate RecommendationEngine
+RecommendationEngine -> RecommendationEngine: analyzeLearningPatterns()
+RecommendationEngine -> RecommendationEngine: calculateReadinessScore()
+RecommendationEngine --> ProgressTracker: next_lesson_suggestions, difficulty_adjustment
+deactivate RecommendationEngine
+
+Backend -> Frontend: pushProgressUpdate(achievements_unlocked)
+Frontend --> Student: displayProgressBar(), showBadges(), suggestNextSteps()
+
+@enduml
