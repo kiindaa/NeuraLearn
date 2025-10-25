@@ -1,1 +1,1 @@
-<img width="1090" height="866" alt="Component Diagram" src="https://github.com/user-attachments/assets/db05c6ed-1630-4714-9d5b-a8a880a0dde7" />
+<img width="1919" height="580" alt="Component" src="https://github.com/user-attachments/assets/041fd4a9-1f70-4d99-b531-048856b6b22e" />
