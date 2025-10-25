@@ -1,0 +1,64 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor Student
+actor Instructor
+actor Admin
+
+actor "Authenticated User" as AuthUser <<Generalization>>
+AuthUser <|-- Student
+AuthUser <|-- Instructor
+AuthUser <|-- Admin
+
+rectangle "NeuraLearn Use Case Diagram" {
+  usecase "Register/Login" as UC1
+  
+  package "Learning Module" {
+    usecase "View Courses and Lessons" as UC2
+    usecase "Track Progress" as UC4
+  }
+  
+  package "Quiz Module" {
+    usecase "Take Quiz and View Results" as UC3
+    usecase "Generate AI-Based Quiz" as UC6
+    usecase "Approve or Edit Quiz Questions" as UC7
+  }
+  
+  package "Management Module" {
+    usecase "Upload Course and Manage Content" as UC5
+    usecase "Manage Users and Courses" as UC8
+    usecase "View Analytics/Dashboard" as UC9
+  }
+}
+
+' All authenticated users can register/login
+AuthUser --> UC1
+
+' Student-specific use cases
+Student --> UC2
+Student --> UC3
+Student --> UC4
+
+' Instructor-specific use cases
+Instructor --> UC5
+Instructor --> UC6
+Instructor --> UC7
+Instructor --> UC9
+
+' Admin-specific use cases
+Admin --> UC8
+Admin --> UC9
+
+' Use case relationships
+UC2 .> UC3 : <<include>>
+UC5 .> UC2 : <<include>>
+UC6 .> UC7 : <<extend>>
+UC8 .> UC5 : <<include>>
+
+note right of AuthUser
+  All users must authenticate
+  before accessing the platform
+end note
+
+@enduml
