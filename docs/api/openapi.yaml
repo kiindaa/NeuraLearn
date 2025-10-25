@@ -1,0 +1,105 @@
+openapi: 3.0.3
+info:
+  title: NeuraLearn API
+  version: 0.1.0
+servers:
+  - url: http://localhost:5000
+paths:
+  /api/auth/login:
+    post:
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email: { type: string }
+                password: { type: string }
+                role: { type: string }
+      responses:
+        '200': { description: OK }
+  /api/auth/signup:
+    post:
+      summary: Signup
+      responses:
+        '201': { description: Created }
+  /api/auth/verify:
+    get:
+      summary: Verify token
+      responses:
+        '200': { description: OK }
+  /api/courses/:
+    get:
+      summary: List courses
+      responses:
+        '200': { description: OK }
+    post:
+      summary: Create course (admin)
+      responses:
+        '201': { description: Created }
+  /api/courses/{courseId}:
+    get:
+      summary: Get course
+      parameters:
+        - in: path
+          name: courseId
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+  /api/courses/{courseId}/enroll:
+    post:
+      summary: Enroll in course
+      responses:
+        '200': { description: OK }
+  /api/courses/{courseId}/progress:
+    get:
+      summary: Get course progress
+      responses:
+        '200': { description: OK }
+  /api/quiz/generate:
+    post:
+      summary: Generate quiz
+      responses:
+        '201': { description: Created }
+  /api/quiz/{quizId}:
+    get:
+      summary: Get quiz
+      responses:
+        '200': { description: OK }
+  /api/quiz/{quizId}/submit:
+    post:
+      summary: Submit quiz
+      responses:
+        '200': { description: OK }
+  /api/quiz/{quizId}/questions:
+    get:
+      summary: Get quiz questions
+      responses:
+        '200': { description: OK }
+  /api/quiz/history:
+    get:
+      summary: Get quiz history
+      responses:
+        '200': { description: OK }
+  /api/quiz/statistics:
+    get:
+      summary: Get quiz statistics
+      responses:
+        '200': { description: OK }
+  /api/user/profile:
+    get:
+      summary: Get profile
+      responses:
+        '200': { description: OK }
+    put:
+      summary: Update profile
+      responses:
+        '200': { description: OK }
+  /api/dashboard/metrics:
+    get:
+      summary: Dashboard metrics
+      responses:
+        '200': { description: OK }
