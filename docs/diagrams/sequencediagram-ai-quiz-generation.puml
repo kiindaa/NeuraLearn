@@ -1,0 +1,89 @@
+@startuml
+title AI Quiz Generation Sequence Diagram
+
+actor Instructor as Instructor
+participant "Frontend UI" as Frontend
+participant "Backend API" as Backend
+participant "AIService" as AIService
+participant "Database" as Database
+participant "QuizValidator" as Validator
+
+== Phase 1: Lesson Selection & AI Request ==
+
+Instructor -> Frontend: selectLesson(lesson_id)
+activate Frontend
+
+Frontend -> Backend: POST /api/lessons/{id}/generate-quiz
+activate Backend
+
+Backend -> Database: SELECT * FROM lessons WHERE lesson_id = ?
+activate Database
+Database --> Backend: lesson_content, metadata
+deactivate Database
+
+Backend -> AIService: generateQuiz(lesson_text, difficulty, num_questions)
+activate AIService
+
+== Phase 2: AI Processing & Response ==
+
+AIService -> AIService: processContent()
+activate AIService
+AIService -> AIService: analyzeTextStructure()
+AIService -> AIService: generateQuestions(5-10)
+AIService -> AIService: createAnswerOptions()
+AIService -> AIService: validateQuestionQuality()
+deactivate AIService
+
+AIService --> Backend: quiz_data{questions[], answers[], explanations[]}
+deactivate AIService
+
+== Phase 3: Quiz Storage & Validation ==
+
+Backend -> Validator: validateQuestions(quiz_data)
+activate Validator
+Validator -> Validator: checkQuestionClarity()
+Validator -> Validator: verifyAnswerAccuracy()
+Validator --> Backend: validated_quiz, confidence_scores
+deactivate Validator
+
+Backend -> Database: INSERT INTO quizzes VALUES (...)
+activate Database
+Database --> Backend: quiz_id, created_timestamp
+deactivate Database
+
+Backend --> Frontend: quiz_preview, status: 'pending_approval'
+deactivate Backend
+
+Frontend --> Instructor: displayGeneratedQuizForReview()
+deactivate Frontend
+
+== Phase 4: Instructor Approval ==
+
+Instructor -> Frontend: reviewQuiz()\neditQuestion(question_id, changes)
+activate Frontend
+
+Frontend -> Backend: PUT /api/quizzes/{id}/approve
+activate Backend
+
+Backend -> Database: UPDATE quizzes SET status = 'approved'\nWHERE quiz_id = ?
+activate Database
+Database --> Backend: update_confirmation
+deactivate Database
+
+Backend --> Frontend: success: true, quiz_ready: true
+deactivate Backend
+
+Frontend --> Instructor: showQuizPublishedSuccess()
+deactivate Frontend
+
+== Error Handling Scenario ==
+
+group [ALT] AI Service Unavailable
+    Backend -> AIService: generateQuiz(lesson_text)
+    AIService --> Backend: Error: Service Unavailable
+    Backend -> Backend: fallbackToTemplateQuestions()
+    Backend --> Frontend: warning: used_template_questions
+end
+
+@enduml
+
