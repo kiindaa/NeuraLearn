@@ -1,0 +1,57 @@
+@startuml
+title NeuraLearn - Component Architecture
+
+package "Frontend Layer" {
+  [React Application] as Frontend
+  [Student Dashboard] as StudentUI
+  [Instructor Portal] as InstructorUI
+  [Admin Panel] as AdminUI
+}
+
+package "Backend Layer" {
+  [Flask REST API] as Backend
+  [Authentication Controller] as Auth
+  [Course Management] as Courses
+  [Quiz Engine] as Quiz
+  [Progress Tracking] as Progress
+}
+
+package "AI Services" {
+  [Hugging Face Integration] as AIService
+  [Quiz Generator] as QuizGen
+}
+
+package "Data Layer" {
+  [PostgreSQL Database] as Database
+}
+
+package "Infrastructure" {
+  [JWT Authentication] as JWT
+  [Email Service] as Email
+}
+
+' Correct connections
+Frontend --> Backend : REST API
+Backend --> Auth
+Auth --> JWT : Token Validation
+Backend --> Courses
+Backend --> Quiz
+Quiz --> AIService : AI Requests
+Backend --> Progress
+Courses --> Database : SQL
+Quiz --> Database : SQL
+Progress --> Database : SQL
+Backend --> Email : Notifications
+
+note right of Frontend
+  React + TypeScript
+  Tailwind CSS
+  Responsive Design
+end note
+
+note left of AIService
+  Hugging Face API
+  Quiz Generation
+  Content Analysis
+end note
+@enduml
