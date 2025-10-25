@@ -1,0 +1,97 @@
+@startuml
+title NeuraLearn - Deployment Architecture
+
+cloud "AWS Cloud" {
+  node "Load Balancer\nAWS ALB" as ALB
+  node "Web Firewall\nAWS WAF" as WAF
+  
+  database "Frontend Servers" {
+    node "React App 1\nEC2 + Nginx" as FE1
+    node "React App 2\nEC2 + Nginx" as FE2
+  }
+  
+  database "Backend Servers" {
+    node "Flask API 1\nEC2 + Gunicorn" as BE1
+    node "Flask API 2\nEC2 + Gunicorn" as BE2
+  }
+  
+  database "AI Services" {
+    node "AI Server 1\nEC2 GPU" as AI1
+    node "AI Server 2\nEC2 GPU" as AI2
+  }
+  
+  node "Database\nPostgreSQL RDS" as DB
+  node "Cache\nRedis ElastiCache" as Redis
+  node "Storage\nAWS S3" as S3
+  node "CDN\nCloudFront" as CDN
+}
+
+node "External Services" {
+  node "HuggingFace API" as HF
+  node "OpenAI API" as OpenAI
+  node "Email Service\nSES" as Email
+}
+
+actor "Student" as Student
+actor "Instructor" as Instructor
+actor "Admin" as Admin
+
+' User connections
+Student --> WAF
+Instructor --> WAF
+Admin --> WAF
+WAF --> ALB
+ALB --> FE1
+ALB --> FE2
+
+' Frontend to Backend
+FE1 --> BE1
+FE2 --> BE2
+
+' Backend to AI
+BE1 --> AI1
+BE2 --> AI2
+
+' Backend to Database
+BE1 --> DB
+BE2 --> DB
+BE1 --> Redis
+BE2 --> Redis
+
+' Backend to Storage
+BE1 --> S3
+BE2 --> S3
+
+' AI to External APIs
+AI1 --> HF
+AI2 --> HF
+AI1 --> OpenAI
+
+' Backend to Email
+BE1 --> Email
+BE2 --> Email
+
+' CDN connections
+FE1 --> CDN
+FE2 --> CDN
+CDN --> S3
+
+' High availability
+FE1 .[#blue]. FE2 : Auto Scaling
+BE1 .[#green]. BE2 : Auto Scaling
+AI1 .[#red]. AI2 : AI Cluster
+
+note right of DB
+  Multi-AZ Deployment
+  Automated Backups
+  Read Replicas
+end note
+
+legend
+  | Component | Specification |
+  | Frontend | React + TypeScript |
+  | Backend | Flask + Python |
+  | AI Service | GPU Instances |
+  | Database | PostgreSQL RDS |
+end legend
+@enduml
