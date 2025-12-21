@@ -1,6 +1,9 @@
 from datetime import datetime
 from app import db
 from flask_bcrypt import Bcrypt
+import uuid
+from sqlalchemy.dialects.postgresql import JSONB
+import json
 
 bcrypt = Bcrypt()
 
@@ -157,6 +160,7 @@ class Question(db.Model):
     difficulty = db.Column(db.Enum('easy', 'medium', 'hard', name='question_difficulty'), default='medium')
     points = db.Column(db.Integer, default=1)
     quiz_id = db.Column(db.String(36), db.ForeignKey('quizzes.id'), nullable=False)
+    order_index = db.Column(db.Integer, default=0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -231,6 +235,7 @@ class Enrollment(db.Model):
     user_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
     course_id = db.Column(db.String(36), db.ForeignKey('courses.id'), nullable=False)
     enrolled_at = db.Column(db.DateTime, default=datetime.utcnow)
+    completion_status = db.Column(db.String(20), default='not_started')  # not_started, in_progress, completed
     
     # Unique constraint
     __table_args__ = (db.UniqueConstraint('user_id', 'course_id', name='unique_enrollment'),)
@@ -298,5 +303,87 @@ class LessonCompletion(db.Model):
             'completedAt': self.completed_at.isoformat() if self.completed_at else None,
         }
 
-# Import uuid at the top
-import uuid
+# AI Quiz Generation Models
+class AIGeneratedQuiz(db.Model):
+    """Tracks AI-generated quiz sessions"""
+    __tablename__ = 'ai_generated_quizzes'
+    
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    student_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
+    session_uuid = db.Column(db.String(36), unique=True, default=lambda: str(uuid.uuid4()))
+    topic_ids = db.Column(db.Text, default='[]')  # Store as JSON string
+    difficulty = db.Column(db.String(20))  # Store as string instead of enum for SQLite
+    question_types = db.Column(db.Text, default='[]')  # Store as JSON string
+    total_questions = db.Column(db.Integer, default=5)
+    generated_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    questions = db.relationship('AIQuestion', backref='quiz', lazy='dynamic', cascade='all, delete-orphan')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'studentId': self.student_id,
+            'sessionUuid': self.session_uuid,
+            'topicIds': json.loads(self.topic_ids) if self.topic_ids else [],
+            'difficulty': self.difficulty,
+            'questionTypes': json.loads(self.question_types) if self.question_types else [],
+            'totalQuestions': self.total_questions,
+            'generatedAt': self.generated_at.isoformat(),
+            'questions': [q.to_dict() for q in self.questions]
+        }
+
+
+class AIQuestion(db.Model):
+    """Stores AI-generated questions and their answers"""
+    __tablename__ = 'ai_questions'
+    
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    quiz_id = db.Column(db.String(36), db.ForeignKey('ai_generated_quizzes.id'), nullable=False)
+    question_text = db.Column(db.Text, nullable=False)
+    question_type = db.Column(db.String(20))  # Store as string instead of enum for SQLite
+    options = db.Column(db.Text, default='[]')  # Store as JSON string
+    correct_answer = db.Column(db.Text)
+    student_answer = db.Column(db.Text)
+    is_correct = db.Column(db.Boolean)
+    answered_at = db.Column(db.DateTime)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'quizId': self.quiz_id,
+            'questionText': self.question_text,
+            'questionType': self.question_type,
+            'options': json.loads(self.options) if self.options else [],
+            'correctAnswer': self.correct_answer,
+            'studentAnswer': self.student_answer,
+            'isCorrect': self.is_correct,
+            'answeredAt': self.answered_at.isoformat() if self.answered_at else None
+        }
+
+
+# Update User model to include AI quiz attempts
+User.ai_quiz_attempts = db.relationship('AIGeneratedQuiz', backref='student', lazy='dynamic')
+
+# Update Course model to include topics
+Course.topics = db.relationship('CourseTopic', backref='course', lazy='dynamic', cascade='all, delete-orphan')
+
+# Add CourseTopic model
+class CourseTopic(db.Model):
+    """Represents topics within a course"""
+    __tablename__ = 'course_topics'
+    
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    course_id = db.Column(db.String(36), db.ForeignKey('courses.id'), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    order_index = db.Column(db.Integer)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'courseId': self.course_id,
+            'name': self.name,
+            'description': self.description,
+            'orderIndex': self.order_index
+        }

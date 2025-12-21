@@ -21,7 +21,13 @@ def create_app():
     
     # Configuration
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key')
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'postgresql://postgres:password@localhost/neuralearn')
+    
+    # Use absolute path for SQLite database
+    basedir = os.path.abspath(os.path.dirname(__file__))
+    db_path = os.path.join(basedir, '..', 'instance', 'neuralearn.db')
+    os.makedirs(os.path.dirname(db_path), exist_ok=True)
+    
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', f'sqlite:///{db_path}')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'jwt-secret-string')
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = False
@@ -32,7 +38,7 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
-    cors.init_app(app, origins=['http://localhost:3000'])
+    cors.init_app(app, origins=['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000', 'http://127.0.0.1:3001'])
     bcrypt.init_app(app)
     
     # Import models to register them
@@ -45,6 +51,7 @@ def create_app():
     from app.routes.quiz import quiz_bp
     from app.routes.lessons import lessons_bp
     from app.routes.users import users_bp
+    from app.routes.ai_quiz import bp as ai_quiz_bp
     
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(courses_bp, url_prefix='/api/courses')
@@ -52,6 +59,7 @@ def create_app():
     app.register_blueprint(quiz_bp, url_prefix='/api/quiz')
     app.register_blueprint(lessons_bp, url_prefix='/api/lessons')
     app.register_blueprint(users_bp, url_prefix='/api/user')
+    app.register_blueprint(ai_quiz_bp)
     
     # Seed demo data if empty (dev convenience)
     with app.app_context():

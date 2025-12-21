@@ -89,17 +89,21 @@ const CourseCard: React.FC<{
         </div>
         
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm text-gray-600 mb-4">
-          <div className="flex items-center whitespace-nowrap">
-            <ChevronRight className="h-4 w-4 mr-1 text-gray-500" /> Next: {course.nextLesson || '—'}
+          <div className="flex items-center gap-2 whitespace-normal">
+            <ChevronRight className="h-4 w-4 text-gray-500 flex-shrink-0" /> 
+            <span>Next: {course.nextLesson || '—'}</span>
           </div>
-          <div className="flex items-center">
-            <Clock className="h-4 w-4 mr-1" /> {course.duration || 0} weeks
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 flex-shrink-0" /> 
+            <span>{course.duration || 0} weeks</span>
           </div>
-          <div className="flex items-center">
-            <Users className="h-4 w-4 mr-1" /> {course.students || 0} students
+          <div className="flex items-center gap-2">
+            <Users className="h-4 w-4 flex-shrink-0" /> 
+            <span>{course.students || 0} students</span>
           </div>
-          <div className="flex items-center">
-            <Star className="h-4 w-4 mr-1 text-yellow-500" /> {course.rating || '4.8'}/5.0
+          <div className="flex items-center gap-2">
+            <Star className="h-4 w-4 text-yellow-500 flex-shrink-0" /> 
+            <span>{course.rating || '4.8'}/5.0</span>
           </div>
         </div>
         
@@ -170,6 +174,7 @@ const QuizCard: React.FC<{
 export const StudentDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [searchTerm, setSearchTerm] = React.useState('');
   const { data: metrics, isLoading: metricsLoading } = useQuery({
     queryKey: ['dashboard-metrics'],
     queryFn: apiService.getDashboardMetrics,
@@ -184,14 +189,6 @@ export const StudentDashboard: React.FC = () => {
     queryKey: ['upcoming-quizzes'],
     queryFn: apiService.getUpcomingQuizzes,
   });
-
-  if (metricsLoading || coursesLoading || quizzesLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600"></div>
-      </div>
-    );
-  }
 
   // Demo fallbacks to mirror screenshots when backend is empty
   const demoMetrics = {
@@ -229,8 +226,8 @@ export const StudentDashboard: React.FC = () => {
     },
   ];
   const demoQuizzes = [
-    { id: 'q1', title: 'Supervised Learning', course: 'Introduction to Machine Learning', scheduledAt: new Date(Date.now() + 24*3600*1000).toISOString() },
-    { id: 'q2', title: 'React Hooks', course: 'Web Development Fundamentals', scheduledAt: new Date(Date.now() + 48*3600*1000).toISOString() },
+    { id: 'q1', title: 'Supervised Learning', course: 'Introduction to Machine Learning', courseId: 'mock-ml', scheduledAt: new Date(Date.now() + 24*3600*1000).toISOString() },
+    { id: 'q2', title: 'React Hooks', course: 'Web Development Fundamentals', courseId: 'mock-web', scheduledAt: new Date(Date.now() + 48*3600*1000).toISOString() },
   ];
 
   const m = metrics && (metrics.enrolledCourses || metrics.lessonsCompleted || metrics.quizzesTaken || metrics.averageScore)
@@ -238,6 +235,26 @@ export const StudentDashboard: React.FC = () => {
     : demoMetrics;
   const courseList = (courses && courses.length > 0) ? courses : demoCourses as any[];
   const quizList = (quizzes && quizzes.length > 0) ? quizzes : demoQuizzes as any[];
+
+  // Filter courses based on search term
+  const filteredCourses = React.useMemo(() => {
+    if (!searchTerm.trim()) return courseList;
+    const query = searchTerm.toLowerCase();
+    return courseList.filter((course: any) =>
+      course.title?.toLowerCase().includes(query) ||
+      course.instructor?.toLowerCase().includes(query) ||
+      course.category?.toLowerCase().includes(query) ||
+      course.nextLesson?.toLowerCase().includes(query)
+    );
+  }, [courseList, searchTerm]);
+
+  if (metricsLoading || coursesLoading || quizzesLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -269,17 +286,23 @@ export const StudentDashboard: React.FC = () => {
             <div className="relative flex-1">
               <input
                 type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search courses..."
                 className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-1 focus:ring-primary-500"
               />
             </div>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={() => setSearchTerm('')}>
               <Filter className="h-4 w-4 mr-2" />
-              Filter
+              {searchTerm ? 'Clear' : 'Filter'}
             </Button>
           </div>
           <div className="space-y-4">
-            {courseList?.map((course) => (
+            {filteredCourses.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <p>No courses found matching "{searchTerm}"</p>
+              </div>
+            ) : filteredCourses.map((course) => (
               <CourseCard
                 key={course.id}
                 course={course}
@@ -287,7 +310,8 @@ export const StudentDashboard: React.FC = () => {
                   navigate(`/courses/${course.id}`);
                 }}
                 onPrepare={() => {
-                  navigate('/quiz/generate', { state: { courseId: course.id } });
+                  console.log('Prepare clicked - Course:', course.title);
+                  navigate('/quiz/generate', { state: { courseId: course.id, courseTitle: course.title, lessonTitle: course.nextLesson || course.currentLesson } });
                 }}
               />
             ))}
@@ -303,7 +327,7 @@ export const StudentDashboard: React.FC = () => {
                 key={quiz.id}
                 quiz={quiz}
                 onPrepare={() => {
-                  navigate('/quiz/generate', { state: { courseId: quiz.courseId, quizId: quiz.id } });
+                  navigate('/quiz/generate', { state: { courseId: quiz.courseId, quizId: quiz.id, courseTitle: quiz.course, lessonTitle: quiz.title } });
                 }}
               />
             ))}
@@ -313,3 +337,4 @@ export const StudentDashboard: React.FC = () => {
     </div>
   );
 };
+  
