@@ -1,24 +1,4 @@
-# Technical Evaluation Preparation Guide
-
 ## Cereal Yield Forecasting in Tunisia
-
-This guide is designed for a **20–30 minute technical evaluation**. It follows the final project report and the final GitHub repository.
-
-It contains:
-
-- a short opening explanation,
-- the project problem and solution,
-- the system architecture,
-- the machine-learning pipeline,
-- the technology stack,
-- CRISP-DM and Kanban,
-- model evaluation and selection,
-- repository organisation,
-- a dashboard and API demonstration plan,
-- 30 main questions,
-- 20 backup code questions.
-
----
 
 # 1. A simple 90-second opening answer
 
@@ -37,6 +17,14 @@ The selected deployed model is an ExtraTrees Regressor. It achieved an RMSE of 4
 The final model is saved as a reusable pipeline and is connected to a Streamlit dashboard and a FastAPI REST API. The dashboard also includes national aggregation, error analysis, feature importance, and an experimental drought-risk prototype.
 
 ---
+The main beneficiaries are:
+
+Agricultural analysts — they can study yield patterns and compare regions.
+Government planners and decision-makers — they can identify governorates or years that may need more attention.
+Researchers and universities — they can use the project for agricultural and machine-learning studies.
+Data scientists and developers — they can reuse the model, dashboard, and API.
+Agricultural organisations — they can use the results to support monitoring and planning.
+Farmers indirectly — they may benefit from better decisions, but the model does not predict at individual farm level. 
 
 # 2. Project architecture
 
