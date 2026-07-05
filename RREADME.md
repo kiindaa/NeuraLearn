@@ -556,7 +556,25 @@ The standard ExtraTrees model was still selected because:
 The choice considered both performance and deployment simplicity.
 
 ---
+# Biggest technical challenge
 
+## Say this
+
+The biggest technical challenge was combining several different data sources while avoiding target leakage.
+
+The sources had different formats, column names, time coverage, missing values, and measurement types.
+
+Also, agricultural production, cultivated area, and yield are mathematically related. If current-year production or area is included, the model may indirectly see the answer.
+
+I solved this by:
+
+- standardising governorate names,
+- checking required columns,
+- checking unique merge keys,
+- building one canonical dataset,
+- removing current-year outcome columns,
+- using historical features,
+- evaluating with LOYO.
 ## 28. What is the difference between evaluation and final training?
 
 Evaluation uses LOYO to estimate performance on unseen years.
