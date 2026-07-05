@@ -360,15 +360,6 @@ Examples are:
 These features help the model learn regional patterns over time.
 
 ---
-
-## 16. Why is `shift(1)` important?
-
-`shift(1)` moves the values back by one observation.
-
-This means the current row receives information from the previous available observation instead of its own target.
-
-It is applied before rolling averages so the current target is not included in its own historical feature.
-
 ---
 
 ## 17. How are missing values handled?
@@ -566,8 +557,6 @@ The choice considered both performance and deployment simplicity.
 
 ---
 # Biggest technical challenge
-
-## Say this
 
 The biggest technical challenge was combining several different data sources while avoiding target leakage.
 
