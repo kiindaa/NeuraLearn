@@ -471,26 +471,47 @@ The main metrics are:
 The report also discusses MAPE, but the final comparison table mainly uses RMSE, MAE, and R².
 
 ---
-
 ## 23. What do RMSE, MAE, and R² mean?
-
-### RMSE
-
-RMSE gives more importance to large errors.
-
-Lower is better.
 
 ### MAE
 
-MAE is the average absolute prediction error.
+MAE tells us the model’s **average mistake**.
+
+For example, an MAE of **2.925 qx/ha** means:
+
+> On average, the prediction is about 2.9 qx/ha away from the real yield.
 
 Lower is better.
 
+---
+
+### RMSE
+
+RMSE also measures prediction error, but it gives **more attention to very large mistakes**.
+
+For example, an RMSE of **4.097 qx/ha** means that some larger errors increased the overall score.
+
+Lower is better.
+
+**Simple difference:**
+
+* MAE shows the normal average error.
+* RMSE is more affected by large errors.
+
+---
+
 ### R²
 
-R² shows how much of the variation in the target is represented by the model.
+R² shows how well the model understands the differences between low-yield and high-yield observations.
+
+An R² of **0.758** means:
+
+> The model explains about 75.8% of the changes and differences seen in cereal yield.
 
 Higher is better.
+
+It does **not** mean that every prediction is 75.8% correct.
+
 
 ---
 
@@ -615,8 +636,32 @@ FastAPI also creates automatic documentation at:
 ```text
 http://127.0.0.1:8000/docs
 ```
+# Honest limitation answer
+
+**Question: What would you improve next?**
+
+**Answer:**
+
+I would add newer data, build separate models for each cereal crop, show prediction ranges, add more testing and monitoring, and improve the validation process.
+
+At the moment, the project removes current-year information that could reveal the answer, and the historical features only use earlier years.
+
+In the future, I would create those historical features separately inside each validation round. This would make the evaluation even stricter and more reliable.
 
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # Part B — 20 backup code and implementation questions
 
@@ -1055,12 +1100,4 @@ It is a complete academic prototype. A production system would still need strong
 
 ---
 
-# 9. Honest limitation answer
 
-**Question: What would you improve next?**
-
-**Answer:**
-
-I would add more recent data, create crop-specific models, add prediction intervals, introduce automated tests and monitoring, and regenerate historical features separately inside every validation fold for stricter temporal isolation.
-
-The current workflow removes direct current-year outcome columns and uses earlier observations for historical features. Fully fold-isolated feature generation would make the validation methodology even stronger.
