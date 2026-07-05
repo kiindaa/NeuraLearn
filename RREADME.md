@@ -17,7 +17,7 @@ The selected deployed model is an ExtraTrees Regressor. It achieved an RMSE of 4
 The final model is saved as a reusable pipeline and is connected to a Streamlit dashboard and a FastAPI REST API. The dashboard also includes national aggregation, error analysis, feature importance, and an experimental drought-risk prototype.
 
 ---
-The main beneficiaries are:
+# The main beneficiaries are:
 
 Agricultural analysts — they can study yield patterns and compare regions.
 Government planners and decision-makers — they can identify governorates or years that may need more attention.
